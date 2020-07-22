@@ -33,13 +33,30 @@ RUN apt-get update && \
 		  python3-dev \
 		  libopenblas-dev \
 		  libopenmpi2 \
+            python3-opencv \
             openmpi-bin \
             openmpi-common \
 		  gfortran \
     && rm -rf /var/lib/apt/lists/*
 
+
+
+
+
+#
+# python pip packages
+#
 RUN pip3 install setuptools Cython wheel
+RUN pip3 install pybind11 --ignore-installed 
+RUN pip3 install onnx --verbose
+RUN pip3 install scipy --verbose
+RUN pip3 install scikit-learn --verbose
+RUN pip3 install pandas --verbose
+RUN pip3 install pycuda --verbose
+RUN pip3 install numba --verbose
 RUN pip3 install numpy --verbose
+
+
 
 #
 # PyTorch (for JetPack 4.4 DP)
@@ -111,4 +128,29 @@ RUN echo "$PATH" && echo "$LD_LIBRARY_PATH"
 RUN pip3 install pycuda --verbose
 
 
+
+#
+# JupyterLab
+#
+RUN pip3 install jupyter jupyterlab --verbose
+#RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager@2
+
+RUN jupyter lab --generate-config
+RUN python3 -c "from notebook.auth.security import set_password; set_password('nvidia', '/root/.jupyter/jupyter_notebook_config.json')" 
+
+CMD /bin/bash -c "jupyter lab --ip 0.0.0.0 --port 8888 --allow-root &> /var/log/jupyter.log" & \
+	echo "allow 10 sec for JupyterLab to start @ http://localhost:8888 (password nvidia)" && \
+	echo "JupterLab logging location:  /var/log/jupyter.log  (inside the container)" && \
+	/bin/bash
+
+
+#
+# Install Detectron2 Module
+#
+RUN python3 -m pip install 'git+https://github.com/facebookresearch/detectron2.git' --verbose
+RUN cd /home/ && \
+    !git clone https://github.com/facebookresearch/detectron2 && \
+    cd ../
+    
+    
 
